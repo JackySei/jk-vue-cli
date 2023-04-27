@@ -2,16 +2,25 @@
 const program = require('commander')
 
 const packageJson = require('../package.json')
-const init = require('../lib/init')
+const initnaiveui = require('../lib/initnaiveui')
+const initnpmdemo = require('../lib/initnpmdemo')
 
 program.version(packageJson.version)
 
 program
-  .command('init <name>')
+  .command('initnaiveui <name>')
   .alias('i')
   .description('vue admin 项目初始化工具')
-  .action(name => {
-    init(name)
+  .action((name) => {
+    initnaiveui(name)
+  })
+
+program
+  .command('initnpmdemo <name>')
+  .alias('i')
+  .description('vue admin 项目初始化工具')
+  .action((name) => {
+    initnpmdemo(name)
   })
 
 program.parse(process.argv)
