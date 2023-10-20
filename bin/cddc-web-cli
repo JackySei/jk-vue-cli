@@ -1,0 +1,73 @@
+#!/usr/bin/env node
+const program = require('commander')
+const inquirer = require('inquirer')
+const packageJson = require('../package.json')
+const path = require('path')
+const downloadGitRepo = require('download-git-repo')
+const fs = require('fs-extra')
+const ora = require('ora')
+
+program.version(packageJson.version)
+program
+  .command('create')
+  .alias('i')
+  .description('创建模板')
+  .action(async () => {
+    const { projectName, template } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'projectName',
+        message: '请输入项目名称：'
+      },
+      {
+        type: 'list',
+        name: 'template',
+        message: '请选择模版：',
+        choices: [
+          {
+            name: 'vue3-elementplus-admin',
+            value: 'https://github.com:PanJiaChen/vue-element-admin'
+          },
+          {
+            name: 'vue3-naiveui-admin',
+            value: 'https://github.com:marmelab/react-admin'
+          }
+        ]
+      }
+    ])
+    console.log('projectName===', projectName)
+    console.log('template===', template)
+    // 获取目标文件夹
+    const dest = path.join(process.cwd(), projectName)
+    // 判断是否存在同名文件
+    if (fs.existsSync(dest)) {
+      const { isExist } = await inquirer.prompt({
+        type: 'confirm',
+        name: 'isExist',
+        message: '您输入的项目名称已存在，是否覆盖？'
+      })
+      // 如果覆盖就删除文件夹，否则退出
+      isExist ? fs.removeSync(dest) : process.exit(1)
+    }
+    // 拉取模板文件
+    // 开启loading
+    const loading = ora('正在下载中...')
+    loading.start()
+    downloadGitRepo(template, dest, (err) => {
+      if (err) {
+        loading.fail('创建模版失败' + err.message)
+        return
+      }
+      loading.succeed('创建模版成功')
+      // 初始化拉取的模板项目的 package.json
+      // 修改package.json
+      const pkgPath = path.join(process.cwd(), projectName, 'package.json')
+      const pkgContent = fs.readFileSync(pkgPath, 'utf-8')
+      const pkgJson = JSON.parse(pkgContent)
+      pkgJson.name = projectName
+      pkgJson.version = '1.0.0'
+      fs.writeFileSync(pkgPath, JSON.stringify(pkgJson, null, 2))
+    })
+  })
+
+program.parse(process.argv)
