@@ -6,6 +6,7 @@ const path = require('path')
 const downloadGitRepo = require('download-git-repo')
 const fs = require('fs-extra')
 const ora = require('ora')
+const { exec } = require('child_process')
 
 program.version(packageJson.version)
 program
@@ -26,11 +27,11 @@ program
         choices: [
           {
             name: 'vue3-elementplus-admin',
-            value: 'https://github.com:PanJiaChen/vue-element-admin'
+            value: 'https://gitee.com/JackySei/element-plus-template.git'
           },
           {
             name: 'vue3-naiveui-admin',
-            value: 'https://github.com:marmelab/react-admin'
+            value: 'https://github.com:JackySei/naive-ui-admin'
           }
         ]
       }
@@ -51,14 +52,14 @@ program
     }
     // 拉取模板文件
     // 开启loading
-    const loading = ora('正在下载中...')
-    loading.start()
+    const loadingTemplate = ora('正在下载模板...')
+    loadingTemplate.start()
     downloadGitRepo(template, dest, (err) => {
       if (err) {
-        loading.fail('创建模版失败' + err.message)
+        loadingTemplate.fail('创建模版失败' + err.message)
         return
       }
-      loading.succeed('创建模版成功')
+      loadingTemplate.succeed('创建模版成功')
       // 初始化拉取的模板项目的 package.json
       // 修改package.json
       const pkgPath = path.join(process.cwd(), projectName, 'package.json')
@@ -67,6 +68,22 @@ program
       pkgJson.name = projectName
       pkgJson.version = '1.0.0'
       fs.writeFileSync(pkgPath, JSON.stringify(pkgJson, null, 2))
+      // 自动安装相关依赖
+      const loadingInstall = ora('正在下载包依赖...')
+      loadingInstall.start()
+      exec(
+        'npm i',
+        {
+          cwd: path.join(process.cwd(), projectName)
+        },
+        function (error) {
+          if (error) {
+            loadingInstall.fail('依赖安装失败')
+            return
+          }
+          loadingInstall.succeed('依赖安装成功')
+        }
+      )
     })
   })
 
