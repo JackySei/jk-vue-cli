@@ -14,7 +14,7 @@ program
   .alias('i')
   .description('创建模板')
   .action(async () => {
-    const { projectName, template } = await inquirer.prompt([
+    const { projectName, template, needDownLoad } = await inquirer.prompt([
       {
         type: 'input',
         name: 'projectName',
@@ -34,6 +34,11 @@ program
             value: 'https://github.com:JackySei/naive-ui-admin'
           }
         ]
+      },
+      {
+        type: 'confirm',
+        name: 'needDownLoad',
+        message: '是否需要下载相关依赖'
       }
     ])
     console.log('projectName===', projectName)
@@ -69,21 +74,23 @@ program
       pkgJson.version = '1.0.0'
       fs.writeFileSync(pkgPath, JSON.stringify(pkgJson, null, 2))
       // 自动安装相关依赖
-      const loadingInstall = ora('正在下载包依赖...')
-      loadingInstall.start()
-      exec(
-        'npm i',
-        {
-          cwd: path.join(process.cwd(), projectName)
-        },
-        function (error) {
-          if (error) {
-            loadingInstall.fail('依赖安装失败')
-            return
+      if (needDownLoad) {
+        const loadingInstall = ora('正在下载包依赖...')
+        loadingInstall.start()
+        exec(
+          'npm i',
+          {
+            cwd: path.join(process.cwd(), projectName)
+          },
+          function (error) {
+            if (error) {
+              loadingInstall.fail('依赖安装失败')
+              return
+            }
+            loadingInstall.succeed('依赖安装成功')
           }
-          loadingInstall.succeed('依赖安装成功')
-        }
-      )
+        )
+      }
     })
   })
 

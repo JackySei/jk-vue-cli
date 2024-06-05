@@ -24,6 +24,7 @@
     "download-git-repo": "^3.0.2",
     "fs-extra": "^11.1.1",
     "inquirer": "^8.2.6",
+    "jk-naiveui-cli": "^3.0.8",
     "ora": "^5.4.1"
   },
   "devDependencies": {
